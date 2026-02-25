@@ -12,6 +12,7 @@ import '../../../core/services/storage_service.dart';
 import '../../../core/utils/constants/api_constants.dart';
 import '../../../core/utils/constants/snackbar_constant.dart';
 import '../../../core/utils/logging/logger.dart';
+import '../../../routes/app_routes.dart';
 import '../../practice/model/question_model.dart' hide Data;
 import '../model/pro_tips_model.dart' hide Data;
 
@@ -19,16 +20,14 @@ class HomeScreenController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    getTodayTips();
-    getProTips();
-    getResumeInterview();
-    getRecentActivity();
-    getProgress();
+    _initializeScreen();
   }
 
   final NetworkCaller _networkCaller = Get.find<NetworkCaller>();
   final PracticeController controller = Get.find<PracticeController>();
 
+  RxBool isInitializing = true.obs; // screen loading flag
+  RxBool isInitError = false.obs;
   RxBool isTodayTipsLoading = false.obs;
   RxBool isTodayTipsError = false.obs;
   RxBool isProTipsLoading = false.obs;
@@ -49,6 +48,66 @@ class HomeScreenController extends GetxController {
   Rx<RecentActivityModel?> recentActivity = Rx<RecentActivityModel?>(null);
   Rx<ProgressModel?> progress = Rx<ProgressModel?>(null);
   Rx<NotificationsModel?> notifications = Rx<NotificationsModel?>(null);
+
+  Future<void> _initializeScreen() async {
+    try {
+      isInitializing.value = true;
+      isInitError.value = false;
+
+      // 1st: get current refresh token from storage
+      final currentRefreshToken = StorageService.refreshToken;
+
+      if (currentRefreshToken == null || currentRefreshToken.isEmpty) {
+        Get.offAllNamed(AppRoute.getOnboardingScreen2());
+        return;
+      }
+
+      // 2nd: call the token refresh API to get fresh tokens
+      final response = await _networkCaller.postRequest(
+        ApiConstant.baseUrl + ApiConstant.token,
+        body: {'refreshToken': currentRefreshToken},
+      );
+
+      if (!response.isSuccess) {
+        // token is invalid/expired → go to login
+        await StorageService.logoutUser();
+        Get.offAllNamed(AppRoute.getOnboardingScreen2());
+        return;
+      }
+
+      // 3rd: save new tokens
+      final data = response.responseData['data'];
+      await StorageService.saveTokens(
+        accessToken: data['accessToken'],
+        refreshToken: data['refreshToken'] ?? currentRefreshToken,
+        userId: StorageService.userId ?? '',
+      );
+
+      isInitializing.value = false;
+      isInitError.value = false;
+
+      AppLoggerHelper.debug('Tokens refreshed successfully on home init');
+
+      // 4th: now run all fetches in parallel with fresh token
+      await Future.wait([
+        getTodayTips(),
+        getProTips(),
+        getResumeInterview(),
+        getRecentActivity(),
+        getProgress(),
+      ]);
+
+    } catch (e) {
+      isInitError.value = true;
+      AppLoggerHelper.error('Init Error: $e');
+    } finally {
+      isInitializing.value = false;
+    }
+  }
+
+  Future<void> retryInit() async {
+    await _initializeScreen();
+  }
 
   Future<void> getTodayTips() async {
     try {

@@ -27,6 +27,8 @@ class CollectInfoController extends GetxController {
   final TextEditingController jobDescriptionController =
       TextEditingController();
 
+  RxString searchText = ''.obs;
+
   // upload loading
   RxBool isUploading = false.obs;
 
@@ -45,6 +47,19 @@ class CollectInfoController extends GetxController {
 
   // Reactive list to store selected items
   var selectedCompanies = <String>[].obs;
+
+  void addCustomCompany(TextEditingController textController) {
+    final name = textController.text.trim();
+    if (name.isEmpty) return;
+    if (!companies.contains(name)) {
+      companies.add(name);
+    }
+    if (!selectedCompanies.contains(name)) {
+      selectedCompanies.add(name);
+    }
+    textController.clear();
+    searchText.value = ''; // add this
+  }
 
   void toggleSelection(String name) {
     if (selectedCompanies.contains(name)) {
@@ -162,6 +177,18 @@ class CollectInfoController extends GetxController {
 
     if (result != null) {
       PlatformFile file = result.files.first;
+      final fileSizeMB = file.size / 1024 / 1024;
+      if (fileSizeMB > 5) {
+        Get.snackbar(
+          "File Too Large",
+          "Please upload a file smaller than 5MB",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: AppColors.softPurpleDarker,
+          colorText: AppColors.whiteLight,
+        );
+        return;
+      }
+
 
       // Conversion logic as before...
       resumes[index] = ResumeModel(

@@ -5,6 +5,7 @@ import 'package:dtc6464/core/utils/logging/logger.dart';
 import 'package:easy_push_notification/easy_push_notification.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 
@@ -13,6 +14,18 @@ import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.edgeToEdge,
+  );
+
+  SystemChrome.setSystemUIOverlayStyle(     // 2nd
+    const SystemUiOverlayStyle(
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+      statusBarColor: Colors.transparent,
+    ),
+  );
+
 
   try {
     // 1. Initialize Firebase FIRST

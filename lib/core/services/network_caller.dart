@@ -11,7 +11,7 @@ import '../services/storage_service.dart';
 import '../utils/constants/api_constants.dart';
 
 class NetworkCaller {
-  final int timeoutDuration = 40;
+  final int timeoutDuration = 120;
   static bool _isRefreshing = false;
   static Completer<String?>? _refreshCompleter;
   static int _retryCount = 0;
@@ -166,7 +166,7 @@ class NetworkCaller {
         request.files.add(await MultipartFile.fromPath(fileFieldName, path));
       }
 
-      StreamedResponse streamedResponse = await request.send();
+      StreamedResponse streamedResponse = await request.send().timeout(Duration(seconds: 120));
       final response = await Response.fromStream(streamedResponse);
 
       // Handle 401 - Unauthorized

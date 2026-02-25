@@ -30,25 +30,31 @@ class Page3 extends StatelessWidget {
                 color: AppColors.softPurpleDarker,
               ),
             ).paddingOnly(left: 26.w),
-        
+
             20.verticalSpace,
-        
-            CustomTextField(
+
+            Obx(() => CustomTextField(
               controller: controller.interviewingCompanyController,
               hintText: "IT Company",
-              suffixIcon: Icon(Icons.search),
-            ),
-        
+              suffixIcon: controller.searchText.value.trim().isNotEmpty
+                  ? GestureDetector(
+                onTap: () => controller.addCustomCompany(
+                  controller.interviewingCompanyController,
+                ),
+                child: Icon(Icons.add, color: AppColors.softPurpleDarker),
+              )
+                  : SizedBox.shrink(),
+              onChanged: (value) => controller.searchText.value = value,
+            )),
+
             12.verticalSpace,
-        
+
             Obx(
-              () => Wrap(
-                spacing: 5.w, // Gap between chips
-                runSpacing: 15.h, // Gap between lines
+                  () => Wrap(
+                spacing: 5.w,
+                runSpacing: 15.h,
                 children: controller.companies.map((company) {
-                  final isSelected = controller.selectedCompanies.contains(
-                    company,
-                  );
+                  final isSelected = controller.selectedCompanies.contains(company);
                   return SelectionChip(
                     label: company,
                     isSelected: isSelected,
