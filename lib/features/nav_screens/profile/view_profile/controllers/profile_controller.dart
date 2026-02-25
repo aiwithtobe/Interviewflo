@@ -20,7 +20,7 @@ class ProfileController extends GetxController {
   }
   final NetworkCaller _networkCaller = Get.find<NetworkCaller>();
   Rx<String> userName = 'Loading Name...'.obs;
-  Rx<String> userAvatar = 'https://placehold.co/61x61'.obs;
+  Rx<String> userAvatar = ''.obs;
 
   RxBool isProfileLoading = false.obs;
   RxBool isProfileError = false.obs;
@@ -48,7 +48,7 @@ class ProfileController extends GetxController {
 
       // Update UI observables
       userName.value = model.data!.profile!.fullName;
-      userAvatar.value = model.data!.profile!.profilePicture!.fileUrl;
+      userAvatar.value = "https://api.datatechcon.com${model.data!.profile!.profilePicture!.fileUrl}";
       isProfileLoading.value = false;
       isProfileError.value = false;
     } catch (e) {
