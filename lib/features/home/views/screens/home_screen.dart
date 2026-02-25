@@ -61,79 +61,94 @@ class HomeScreen extends StatelessWidget {
           ),
         );
       }
-      return AnnotatedRegion<SystemUiOverlayStyle>(
-          value: const SystemUiOverlayStyle(
-          systemNavigationBarColor: Colors.transparent,
-          statusBarColor: Colors.transparent,
-      ),
-        child: RefreshIndicator(
-          onRefresh: () async {
-            controller.getTodayTips();
-            controller.getProTips();
-            controller.getResumeInterview();
-            controller.getRecentActivity();
-            controller.getProgress();
-          },
-          child: Background(
-            child: Scaffold(
-              backgroundColor: Colors.transparent,
-              appBar: PreferredSize(
-                preferredSize: Size(double.maxFinite, 80.h),
-                child: AppBar(
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  centerTitle: false,
-                  title: Text(
-                    'Welcome back!',
-                    style: getTextStyle(
-                      fontSize: 24.sp,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.softPurpleDarker,
-                    ),
+      return RefreshIndicator(
+        onRefresh: () async {
+          controller.getTodayTips();
+          controller.getProTips();
+          controller.getResumeInterview();
+          controller.getRecentActivity();
+          controller.getProgress();
+        },
+        child: Background(
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: PreferredSize(
+              preferredSize: Size(double.maxFinite, 80.h),
+              child: AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                centerTitle: false,
+                title: Text(
+                  'Welcome back!',
+                  style: getTextStyle(
+                    fontSize: 24.sp,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.softPurpleDarker,
                   ),
-                  actions: [
-                    InkWell(
-                      onTap: () => Get.toNamed(AppRoute.viewNotificationsScreen),
-                      child: Image.asset(IconPath.notification),
-                    ),
-                  ],
-                  bottom: PreferredSize(
-                    preferredSize: Size(double.maxFinite, 30.h),
-                    child: Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: Text(
-                        'Ready to ace your next interview?',
-                        style: getTextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w400,
-                          color: AppColors.softPurpleDarkerHover,
-                        ),
-                      ).paddingOnly(left: 16.w),
-                    ),
+                ),
+                actions: [
+                  InkWell(
+                    onTap: () => Get.toNamed(AppRoute.viewNotificationsScreen),
+                    child: Image.asset(IconPath.notification),
+                  ),
+                ],
+                bottom: PreferredSize(
+                  preferredSize: Size(double.maxFinite, 30.h),
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Text(
+                      'Ready to ace your next interview?',
+                      style: getTextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.softPurpleDarkerHover,
+                      ),
+                    ).paddingOnly(left: 16.w),
                   ),
                 ),
               ),
-              body: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    40.verticalSpace,
-              
-                    // Quick Actions
-                    QuickAction(),
-              
-                    20.verticalSpace,
-              
-                    // resumed task
-                    Obx(() {
-                      final bool isLoading =
-                          controller.isResumeInterviewLoading.value;
-                      final resumedModel = controller.resumedQuestions.value;
-                      final bool isError =
-                          controller.isResumeInterviewError.value;
-              
-                      // 1. Handle Error State
-                      if (isError) {
+            ),
+            body: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  40.verticalSpace,
+
+                  // Quick Actions
+                  QuickAction(),
+
+                  20.verticalSpace,
+
+                  // resumed task
+                  Obx(() {
+                    final bool isLoading =
+                        controller.isResumeInterviewLoading.value;
+                    final resumedModel = controller.resumedQuestions.value;
+                    final bool isError =
+                        controller.isResumeInterviewError.value;
+
+                    // 1. Handle Error State
+                    if (isError) {
+                      return _buildErrorWidget(
+                        title: 'Resumed task',
+                        gradient: const LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Color(0xFFD0F1FF), Color(0xFFB3E8FF)],
+                        ),
+                      );
+                    }
+
+                    // // 2. Handle Loading (If no data yet)
+                    // if (isLoading && resumedModel == null) {
+                    //   return const Center(child: CircularProgressIndicator());
+                    // }
+
+                    // 3. Handle Empty/Null Data
+                    if (resumedModel == null ||
+                        resumedModel.data.hasResume == false) {
+                      // If not loading and no data, show error/empty state
+                      if (!isLoading) {
                         return _buildErrorWidget(
                           title: 'Resumed task',
                           gradient: const LinearGradient(
@@ -143,205 +158,184 @@ class HomeScreen extends StatelessWidget {
                           ),
                         );
                       }
-              
-                      // // 2. Handle Loading (If no data yet)
-                      // if (isLoading && resumedModel == null) {
-                      //   return const Center(child: CircularProgressIndicator());
-                      // }
-              
-                      // 3. Handle Empty/Null Data
-                      if (resumedModel == null ||
-                          resumedModel.data.hasResume == false) {
-                        // If not loading and no data, show error/empty state
-                        if (!isLoading) {
-                          return _buildErrorWidget(
-                            title: 'Resumed task',
-                            gradient: const LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [Color(0xFFD0F1FF), Color(0xFFB3E8FF)],
-                            ),
-                          );
-                        }
-                      }
-              
-                      // 4. Success State
-                      return Skeletonizer(
-                        enabled: isLoading,
-                        child: Practice(
-                          data:
-                              resumedModel?.data ??
-                              controller.getResumedPlaceholderData(),
+                    }
+
+                    // 4. Success State
+                    return Skeletonizer(
+                      enabled: isLoading,
+                      child: Practice(
+                        data:
+                            resumedModel?.data ??
+                            controller.getResumedPlaceholderData(),
+                      ),
+                    );
+                  }),
+
+                  20.verticalSpace,
+
+                  // progress
+                  Obx(() {
+                    final bool isLoading = controller.isProgressLoading.value;
+                    final progress = controller.progress.value;
+
+                    if (controller.isProgressError.value) {
+                      return _buildErrorWidget(
+                        title: 'Progress',
+                        gradient: const LinearGradient(
+                          begin: Alignment.topCenter, // 0%
+                          end: Alignment.bottomCenter, // 100%
+                          colors: [Color(0xFFFFDDC8), Color(0xFFFFECC3)],
                         ),
                       );
-                    }),
-              
-                    20.verticalSpace,
-              
-                    // progress
-                    Obx(() {
-                      final bool isLoading = controller.isProgressLoading.value;
-                      final progress = controller.progress.value;
-              
-                      if (controller.isProgressError.value) {
-                        return _buildErrorWidget(
-                          title: 'Progress',
-                          gradient: const LinearGradient(
-                            begin: Alignment.topCenter, // 0%
-                            end: Alignment.bottomCenter, // 100%
-                            colors: [Color(0xFFFFDDC8), Color(0xFFFFECC3)],
-                          ),
-                        );
-                      }
-                      return Skeletonizer(
-                        enabled: isLoading,
-                        child: Progress(
-                          data:
-                              progress ??
-                              controller.getProgressPlaceholderData(),
+                    }
+                    return Skeletonizer(
+                      enabled: isLoading,
+                      child: Progress(
+                        data:
+                            progress ??
+                            controller.getProgressPlaceholderData(),
+                      ),
+                    );
+                  }),
+
+                  20.verticalSpace,
+
+                  // recent activity
+                  Obx(() {
+                    if (controller.isRecentActivityError.value) {
+                      return _buildErrorWidget(
+                        title: 'Recent Activity',
+                        gradient: const LinearGradient(
+                          begin: Alignment.topCenter, // 0%
+                          end: Alignment.bottomCenter, // 100%
+                          colors: [Color(0xFFFFD4D9), Color(0xFFFFC8E3)],
                         ),
                       );
-                    }),
-              
-                    20.verticalSpace,
-              
-                    // recent activity
-                    Obx(() {
-                      if (controller.isRecentActivityError.value) {
-                        return _buildErrorWidget(
-                          title: 'Recent Activity',
-                          gradient: const LinearGradient(
-                            begin: Alignment.topCenter, // 0%
-                            end: Alignment.bottomCenter, // 100%
-                            colors: [Color(0xFFFFD4D9), Color(0xFFFFC8E3)],
-                          ),
-                        );
-                      }
-              
-                      final bool isLoading =
-                          controller.isRecentActivityLoading.value;
-              
-                      final List<Datum> activities = isLoading
-                          ? controller.getRecentActivityPlaceholderData()
-                          : (controller.recentActivity.value?.data ?? []);
-              
-                      return Skeletonizer(
-                        enabled: isLoading,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Recent Activity',
-                              style: getTextStyle(
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.black,
-                              ),
+                    }
+
+                    final bool isLoading =
+                        controller.isRecentActivityLoading.value;
+
+                    final List<Datum> activities = isLoading
+                        ? controller.getRecentActivityPlaceholderData()
+                        : (controller.recentActivity.value?.data ?? []);
+
+                    return Skeletonizer(
+                      enabled: isLoading,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Recent Activity',
+                            style: getTextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black,
                             ),
-              
-                            12.verticalSpace,
-                            Column(
-                              children: activities.map((e) {
-                                return Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 16.w,
-                                    vertical: 12.h,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(14.r),
-                                    color: Colors.white,
-                                  ),
-              
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.check_circle,
-                                            color: AppColors.softPurpleNormal,
-                                            size: 18.h,
-                                          ),
-                                          10.horizontalSpace,
-                                          Expanded(
-                                            child: Text(
-                                              e.title,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: getTextStyle(
-                                                fontSize: 14.sp,
-                                                fontWeight: FontWeight.w600,
-                                                color: AppColors
-                                                    .softPurpleNormalHover,
-                                              ),
+                          ),
+
+                          12.verticalSpace,
+                          Column(
+                            children: activities.map((e) {
+                              return Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 16.w,
+                                  vertical: 12.h,
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(14.r),
+                                  color: Colors.white,
+                                ),
+
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.check_circle,
+                                          color: AppColors.softPurpleNormal,
+                                          size: 18.h,
+                                        ),
+                                        10.horizontalSpace,
+                                        Expanded(
+                                          child: Text(
+                                            e.title,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: getTextStyle(
+                                              fontSize: 14.sp,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors
+                                                  .softPurpleNormalHover,
                                             ),
                                           ),
-                                        ],
+                                        ),
+                                      ],
+                                    ),
+
+                                    4.verticalSpace,
+
+                                    Text(
+                                      e.timeAgo,
+                                      style: getTextStyle(
+                                        fontSize: 12.sp,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.lightGreyNormal,
                                       ),
-              
-                                      4.verticalSpace,
-              
-                                      Text(
-                                        e.timeAgo,
-                                        style: getTextStyle(
-                                          fontSize: 12.sp,
-                                          fontWeight: FontWeight.w500,
-                                          color: AppColors.lightGreyNormal,
-                                        ),
-                                      ).paddingOnly(left: 27.w),
-              
-                                      7.verticalSpace,
-              
-                                      Text(
-                                        'Behavioral Questions - Score:${e.score ?? 0}%',
-                                        style: getTextStyle(
-                                          fontSize: 12.sp,
-                                          fontWeight: FontWeight.w500,
-                                          color: const Color(0xFF555556),
-                                        ),
-                                      ).paddingOnly(left: 27.w),
-                                    ],
-                                  ),
-                                ).paddingOnly(bottom: 10.h);
-                              }).toList(),
-                            ),
-                          ],
+                                    ).paddingOnly(left: 27.w),
+
+                                    7.verticalSpace,
+
+                                    Text(
+                                      'Behavioral Questions - Score:${e.score ?? 0}%',
+                                      style: getTextStyle(
+                                        fontSize: 12.sp,
+                                        fontWeight: FontWeight.w500,
+                                        color: const Color(0xFF555556),
+                                      ),
+                                    ).paddingOnly(left: 27.w),
+                                  ],
+                                ),
+                              ).paddingOnly(bottom: 10.h);
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+
+                  20.verticalSpace,
+
+                  // today's tips
+                  Obx(() {
+                    final bool isLoading =
+                        controller.isTodayTipsLoading.value;
+                    final bool isError = controller.isTodayTipsError.value;
+                    final bool hasData =
+                        controller.todayTipsData.value != null;
+
+                    if (isLoading) {
+                      return _buildSkeletonContent(true);
+                    }
+
+                    if (isError && !hasData) {
+                      return _buildErrorWidget(
+                        title: 'Today\'s Tips',
+                        gradient: const LinearGradient(
+                          begin: Alignment.topCenter, // 0%
+                          end: Alignment.bottomCenter, // 100%
+                          colors: [Color(0xFFDFD3FD), Color(0xFFCED3FF)],
                         ),
                       );
-                    }),
-              
-                    20.verticalSpace,
-              
-                    // today's tips
-                    Obx(() {
-                      final bool isLoading =
-                          controller.isTodayTipsLoading.value;
-                      final bool isError = controller.isTodayTipsError.value;
-                      final bool hasData =
-                          controller.todayTipsData.value != null;
-              
-                      if (isLoading) {
-                        return _buildSkeletonContent(true);
-                      }
-              
-                      if (isError && !hasData) {
-                        return _buildErrorWidget(
-                          title: 'Today\'s Tips',
-                          gradient: const LinearGradient(
-                            begin: Alignment.topCenter, // 0%
-                            end: Alignment.bottomCenter, // 100%
-                            colors: [Color(0xFFDFD3FD), Color(0xFFCED3FF)],
-                          ),
-                        );
-                      }
-              
-                      return _buildSkeletonContent(false);
-                    }),
-              
-                    60.verticalSpace,
-                  ],
-                ).paddingSymmetric(horizontal: 16.w),
-              ),
+                    }
+
+                    return _buildSkeletonContent(false);
+                  }),
+
+                  60.verticalSpace,
+                ],
+              ).paddingSymmetric(horizontal: 16.w),
             ),
           ),
         ),
